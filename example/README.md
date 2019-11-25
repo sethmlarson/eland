@@ -15,3 +15,14 @@ python load.py
 ```
 
 This will create an index called `online-retail` with a mapping defined in `load.py`.
+
+## See "it" in a Notebook
+
+```
+docker-compose build
+docker-compose up
+```
+
+Go to http://127.0.0.1:8888/ and use the token `eland`.
+
+Use `docker-compose down` to remove the docker images.

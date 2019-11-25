@@ -1,0 +1,39 @@
+---
+version: '3.3'
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_STACK_VERSION}
+    hostname: elasticsearch
+    container_name: elasticsearch-${ELASTIC_STACK_VERSION}
+    environment:
+      - 'http.host=0.0.0.0'
+      - 'transport.host=127.0.0.1'
+      - 'xpack.monitoring.collection.enabled=true'
+      - logger.level=WARN
+    ports:
+      - '127.0.0.1:9200:9200'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cat/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - stack
+
+  notebook:
+    container_name: notebook
+    ports:
+      - '127.0.0.1:8888:8888'
+    tty: true
+    build:
+      dockerfile: ${PWD}/docker-compose/notebook/Dockerfile
+      context: ${PWD}
+    networks:
+      - stack
+    depends_on:
+      - elasticsearch
+    command: ['/notebook/setup.sh']
+
+networks:
+  stack: {}
