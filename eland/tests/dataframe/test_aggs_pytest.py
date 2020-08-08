@@ -17,6 +17,7 @@
 
 # File called _pytest for PyCharm compatability
 
+import pytest
 import numpy as np
 from pandas.testing import assert_frame_equal
 
@@ -94,3 +95,10 @@ class TestDataFrameAggs(TestData):
         # TODO - investigate this more
         pd_aggs = pd_aggs.astype("float64")
         assert_frame_equal(pd_aggs, ed_aggs, check_exact=False, check_less_precise=2)
+
+    @pytest.mark.parametrize("aggregation", ["mean", "max", "min", "median"])
+    def test_aggs_list_or_string(self, df, aggregation):
+        df = df.select_dtypes(include=[np.number])
+        df.agg(aggregation)
+        df.agg([aggregation])
+        df.agg([aggregation, aggregation])

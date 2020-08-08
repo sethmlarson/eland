@@ -462,7 +462,7 @@ class DataFrame(NDFrame):
         """
         Provide autocompletion on field names in interactive environment.
         """
-        return super().__dir__() + [
+        return list(super().__dir__()) + [
             column_name
             for column_name in self._query_compiler.columns.to_list()
             if is_valid_attr_name(column_name)
@@ -1386,12 +1386,17 @@ class DataFrame(NDFrame):
         # ['count', 'mad', 'max', 'mean', 'median', 'min', 'mode', 'quantile',
         # 'rank', 'sem', 'skew', 'sum', 'std', 'var', 'nunique']
         if isinstance(func, str):
-            # wrap in list
-            func = [func]
-            return self._query_compiler.aggs(func)
+            # When given a string Pandas will return an unnamed
+            # Series instead of a DataFrame. With a list of a single
+            # string Pandas still returns a DataFrame.
+            return self._query_compiler.aggs([func]).squeeze().rename(None)
         elif is_list_like(func):
             # we have a list!
             return self._query_compiler.aggs(func)
+
+        raise NotImplementedError(
+            f"DataFrame.aggregate() not implemented for {func!r} type"
+        )
 
     agg = aggregate
 
