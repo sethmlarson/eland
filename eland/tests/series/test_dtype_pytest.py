@@ -15,9 +15,11 @@
 #  specific language governing permissions and limitations
 #  under the License.
 
-import numpy as np
 import warnings
-from eland.common import build_pd_series, EMPTY_SERIES_DTYPE
+
+import numpy as np
+
+from eland.common import EMPTY_SERIES_DTYPE, build_pd_series
 
 
 def test_empty_series_dtypes():

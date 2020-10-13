@@ -18,32 +18,32 @@
 import copy
 import typing
 import warnings
-from typing import Optional, Sequence, Tuple, List, Dict, Any
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
 from elasticsearch.helpers import scan
 
-from eland.index import Index
+from eland.actions import PostProcessingAction, SortFieldAction
 from eland.common import (
-    SortOrder,
     DEFAULT_CSV_BATCH_OUTPUT_SIZE,
     DEFAULT_ES_MAX_RESULT_WINDOW,
-    elasticsearch_date_to_pandas_date,
+    SortOrder,
     build_pd_series,
+    elasticsearch_date_to_pandas_date,
 )
+from eland.index import Index
 from eland.query import Query
-from eland.actions import PostProcessingAction, SortFieldAction
 from eland.tasks import (
-    HeadTask,
     RESOLVED_TASK_TYPE,
-    TailTask,
-    SampleTask,
-    BooleanFilterTask,
     ArithmeticOpFieldsTask,
-    QueryTermsTask,
+    BooleanFilterTask,
+    HeadTask,
     QueryIdsTask,
+    QueryTermsTask,
+    SampleTask,
     SizeTask,
+    TailTask,
 )
 
 if typing.TYPE_CHECKING:
