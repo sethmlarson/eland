@@ -73,6 +73,7 @@ setup(
     install_requires=["elasticsearch>=7.7", "pandas>=1", "matplotlib", "numpy"],
     python_requires=">=3.6",
     extras_require={
+        "geo": ["geopandas", "shapely"],
         "xgboost": ["xgboost>=0.90,<2"],
         "scikit-learn": ["scikit-learn>=0.22.1,<1"],
         "lightgbm": ["lightgbm>=2,<2.4"],

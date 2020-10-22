@@ -28,6 +28,7 @@ from eland import DataFrame
 from eland.common import DEFAULT_CHUNK_SIZE, ensure_es_client
 from eland.field_mappings import FieldMappings, verify_mapping_compatibility
 from eland.utils import deprecated_api
+from eland.geo import is_geo_dataframe, is_geo_series, shape_to_es
 
 
 @deprecated_api("eland.DataFrame()")
@@ -215,11 +216,19 @@ def pandas_to_eland(
         use_pandas_index_for_es_ids: bool,
         es_dest_index: str,
     ) -> Generator[Dict[str, Any], None, None]:
+
+        geo_columns = [column for column in pd_df.columns if is_geo_series(pd_df[column])]
+
         for row in pd_df.iterrows():
             if es_dropna:
                 values = row[1].dropna().to_dict()
             else:
                 values = row[1].to_dict()
+
+            # Convert all shapely geometry into Elasticsearch geo_point/geo_shape
+            for geo_column in geo_columns:
+                if geo_column in values:
+                    values[geo_column] = shape_to_es(values[geo_column])
 
             if use_pandas_index_for_es_ids:
                 # Use index as _id

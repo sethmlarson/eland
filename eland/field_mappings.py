@@ -38,6 +38,7 @@ from pandas.core.dtypes.common import (
     is_string_dtype,
 )
 from pandas.core.dtypes.inference import is_list_like
+from eland.geo import is_geo_dataframe, is_geo_series
 
 if TYPE_CHECKING:
     from elasticsearch import Elasticsearch
@@ -501,7 +502,7 @@ class FieldMappings:
 
     @staticmethod
     def _generate_es_mappings(
-        dataframe: "DataFrame", es_type_overrides: Optional[Mapping[str, str]] = None
+        dataframe: "DataFrame", es_type_overrides: Optional[Dict[str, str]] = None
     ) -> Dict[str, Dict[str, Dict[str, Any]]]:
         """Given a pandas dataframe, generate the associated Elasticsearch mapping
 
@@ -536,6 +537,22 @@ class FieldMappings:
           }
         }
         """
+        if es_type_overrides is None:
+            es_type_overrides = {}
+
+        # GeoDataFrames always have a geometry column
+        if is_geo_dataframe(dataframe):
+            for column in dataframe.columns:
+                if column in es_type_overrides or not is_geo_series(dataframe[column]):
+                    continue
+                # If we receive a GeoDataFrame with all points then
+                # we use 'geo_point', otherwise 'geo_shape'
+                from shapely.geometry import Point
+                if all(isinstance(x, Point) for x in dataframe[column]):
+                    es_dtype = "geo_point"
+                else:
+                    es_dtype = "geo_shape"
+                es_type_overrides.setdefault(column, es_dtype)
 
         mapping_props = {}
         for column, dtype in dataframe.dtypes.iteritems():
