@@ -240,20 +240,17 @@ class QueryCompiler:
         else:
             iterator = results
 
-        i = 0
-        for hit in iterator:
-            i = i + 1
-
-            if "_source" in hit:
+        for i, hit in enumerate(iterator):
+            try:
                 row = hit["_source"]
-            else:
+            except KeyError:
                 row = {}
 
-            # script_fields appear in 'fields'
-            if "fields" in hit:
-                fields = hit["fields"]
-                for key, value in fields.items():
-                    row[key] = value
+            try:
+                # script_fields appear in 'fields'
+                row.update(hit["fields"])
+            except KeyError:
+                pass
 
             # get index value - can be _id or can be field value in source
             if self._index.is_source_field:
@@ -265,10 +262,9 @@ class QueryCompiler:
             # flatten row to map correctly to 2D DataFrame
             rows.append(self._flatten_dict(row, field_mapping_cache))
 
-            if batch_size is not None:
-                if i >= batch_size:
-                    partial_result = True
-                    break
+            if batch_size is not None and i >= batch_size:
+                partial_result = True
+                break
 
             if show_progress:
                 if i % DEFAULT_PROGRESS_REPORTING_NUM_ROWS == 0:
@@ -318,8 +314,8 @@ class QueryCompiler:
                     pd_dtype = "object"
 
             if not is_source_field and type(x) is dict:
-                for a in x:
-                    flatten(x[a], name + a + ".")
+                for k, v in x.items():
+                    flatten(v, f"{name}{k}.")
             elif not is_source_field and type(x) is list:
                 for a in x:
                     flatten(a, name)
@@ -753,15 +749,15 @@ class FieldMappingCache:
         self._date_field_format = dict()
 
     def field_name_pd_dtype(self, es_field_name):
-        if es_field_name in self._field_name_pd_dtype:
+        try:
             return self._field_name_pd_dtype[es_field_name]
-
-        pd_dtype = self._mappings.field_name_pd_dtype(es_field_name)
-
-        # cache this
-        self._field_name_pd_dtype[es_field_name] = pd_dtype
-
-        return pd_dtype
+        except KeyError:
+            pd_dtype = self._mappings.field_name_pd_dtype(es_field_name)
+    
+            # cache this
+            self._field_name_pd_dtype[es_field_name] = pd_dtype
+    
+            return pd_dtype
 
     def date_field_format(self, es_field_name):
         if es_field_name in self._date_field_format:
